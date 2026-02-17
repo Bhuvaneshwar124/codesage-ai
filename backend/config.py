@@ -1,28 +1,40 @@
-import os
 from pathlib import Path
 
-# Base directories
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
-VECTOR_STORE_DIR = BASE_DIR / "vector_store"
+from pydantic_settings import BaseSettings
 
-# Embedding model
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
-# LLM settings
-LLM_MODEL = os.getenv("LLM_MODEL", "mistral")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+class Settings(BaseSettings):
+    # Database
+    DATABASE_URL: str = "postgresql+asyncpg://codesage:changeme@localhost:5432/codesage"
 
-# Chunking settings
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
+    # Embedding
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    EMBEDDING_DIM: int = 384  # dimension for all-MiniLM-L6-v2
 
-# Retrieval settings
-TOP_K = int(os.getenv("TOP_K", "5"))
+    # LLM
+    LLM_MODEL: str = "mistral"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
 
-# Supported file extensions for ingestion
-SUPPORTED_EXTENSIONS = {
-    ".py", ".js", ".ts", ".java", ".cpp", ".c", ".go", ".rs",
-    ".txt", ".md", ".json", ".yaml", ".yml", ".toml", ".cfg", ".ini",
-    ".html", ".css", ".xml",
-}
+    # Chunking
+    CHUNK_SIZE: int = 500
+    CHUNK_OVERLAP: int = 50
+
+    # Retrieval
+    TOP_K: int = 5
+
+    # Uploads
+    UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent / "uploads")
+
+    # Supported file extensions
+    SUPPORTED_EXTENSIONS: set[str] = {
+        ".py", ".js", ".ts", ".jsx", ".tsx",
+        ".java", ".cpp", ".c", ".go", ".rs",
+        ".txt", ".md", ".json", ".yaml", ".yml",
+        ".toml", ".cfg", ".ini",
+        ".html", ".css", ".xml", ".sql",
+    }
+
+    model_config = {"env_file": ".env", "extra": "ignore"}
+
+
+settings = Settings()
