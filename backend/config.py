@@ -1,40 +1,26 @@
-from pathlib import Path
+import os
+from dotenv import load_dotenv
 
-from pydantic_settings import BaseSettings
+load_dotenv()
 
+class Settings:
+    PROJECT_NAME: str = "Fullstack RAG App"
+    VERSION: str = "1.0.0"
 
-class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://codesage:changeme@localhost:5432/codesage"
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/ragdb"
 
-    # Embedding
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    EMBEDDING_DIM: int = 384  # dimension for all-MiniLM-L6-v2
+    )
 
-    # LLM
-    LLM_MODEL: str = "mistral"
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_BASE_URL: str = os.getenv(
+        "OLLAMA_BASE_URL",
+        "http://localhost:11434"
+    )
 
-    # Chunking
-    CHUNK_SIZE: int = 500
-    CHUNK_OVERLAP: int = 50
-
-    # Retrieval
-    TOP_K: int = 5
-
-    # Uploads
-    UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent / "uploads")
-
-    # Supported file extensions
-    SUPPORTED_EXTENSIONS: set[str] = {
-        ".py", ".js", ".ts", ".jsx", ".tsx",
-        ".java", ".cpp", ".c", ".go", ".rs",
-        ".txt", ".md", ".json", ".yaml", ".yml",
-        ".toml", ".cfg", ".ini",
-        ".html", ".css", ".xml", ".sql",
-    }
-
-    model_config = {"env_file": ".env", "extra": "ignore"}
-
+    MODEL_NAME: str = os.getenv(
+        "MODEL_NAME",
+        "qwen2.5:7b"
+    )
 
 settings = Settings()

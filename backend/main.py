@@ -1,34 +1,20 @@
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from routers import documents, health, ingest, query
-from services.database import close_db, init_db
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await init_db()
-    yield
-    await close_db()
-
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from config import settings
+from services.database import get_db
+from sqlalchemy import text
 
 app = FastAPI(
-    title="CodeSage AI",
-    description="RAG-powered codebase and document analysis API",
-    version="1.0.0",
-    lifespan=lifespan,
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
+@app.get("/")
+def root():
+    return {"message": "RAG Backend Running"}
 
-app.include_router(health.router)
-app.include_router(ingest.router, prefix="/api")
-app.include_router(query.router, prefix="/api")
-app.include_router(documents.router, prefix="/api")
+
+@app.get("/db-test")
+def test_db(db: Session = Depends(get_db)):
+    result = db.execute(text("SELECT 1")).fetchone()
+    return {"database_response": result[0]}

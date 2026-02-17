@@ -1,31 +1,22 @@
-from pydantic import BaseModel, Field
+from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP
+from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
+from services.database import Base
 
 
-# ── Ingest ──
-class IngestResponse(BaseModel):
-    status: str
-    files_processed: int
-    chunks_created: int
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(Text)
+    content = Column(Text)
+    created_at = Column(TIMESTAMP, server_default=func.now())
 
 
-# ── Query ──
-class QueryRequest(BaseModel):
-    question: str = Field(..., min_length=1, max_length=2000)
-    top_k: int | None = Field(default=None, ge=1, le=20)
+class Embedding(Base):
+    __tablename__ = "embeddings"
 
-
-class SourceInfo(BaseModel):
-    source: str
-    text: str
-
-
-class QueryResponse(BaseModel):
-    answer: str
-    sources: list[SourceInfo]
-
-
-# ── Documents ──
-class DocumentInfo(BaseModel):
-    name: str
-    ingested_at: str
-    chunk_count: int
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"))
+    chunk = Column(Text)
+    embedding = Column(Vector(768))

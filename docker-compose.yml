@@ -2,65 +2,18 @@ version: "3.9"
 
 services:
   db:
-    image: pgvector/pgvector:pg16
-    restart: unless-stopped
+    image: ankane/pgvector
+    container_name: rag-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ragdb
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./database/init-scripts:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  ollama:
-    image: ollama/ollama:latest
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      OLLAMA_BASE_URL: http://ollama:11434
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
-      LLM_MODEL: ${LLM_MODEL:-mistral}
-      CHUNK_SIZE: ${CHUNK_SIZE:-500}
-      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-50}
-      TOP_K: ${TOP_K:-5}
-      UPLOAD_DIR: /app/uploads
-    volumes:
-      - ./uploads:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
-    environment:
-      VITE_API_URL: http://localhost:${BACKEND_PORT:-8000}
-    depends_on:
-      - backend
+    restart: always
 
 volumes:
-  pgdata:
-  ollama_data:
+  postgres_data:
