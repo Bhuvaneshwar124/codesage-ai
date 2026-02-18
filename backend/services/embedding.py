@@ -1,25 +1,18 @@
-from sentence_transformers import SentenceTransformer
-
+import requests
 from config import settings
 
-_model = None
 
+def generate_embedding(text: str):
+    print("OLLAMA URL:", settings.OLLAMA_BASE_URL)
 
-def _get_model() -> SentenceTransformer:
-    global _model
-    if _model is None:
-        _model = SentenceTransformer(settings.EMBEDDING_MODEL)
-    return _model
+    response = requests.post(
+        f"{settings.OLLAMA_BASE_URL}/api/embeddings",
+        json={
+            "model": settings.MODEL_NAME,
+            "prompt": text
+        }
+    )
 
+    response.raise_for_status()
 
-def embed_text(text: str) -> list[float]:
-    """Embed a single text string."""
-    model = _get_model()
-    return model.encode(text, normalize_embeddings=True).tolist()
-
-
-def embed_chunks(texts: list[str]) -> list[list[float]]:
-    """Embed a batch of text strings."""
-    model = _get_model()
-    embeddings = model.encode(texts, normalize_embeddings=True, batch_size=64)
-    return embeddings.tolist()
+    return response.json()["embedding"]
