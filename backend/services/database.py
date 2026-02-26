@@ -1,3 +1,5 @@
+import json as _json
+import logging
 import time
 from datetime import datetime, timezone
 
@@ -6,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from config import settings
+
+logger = logging.getLogger("codesage.database")
 
 engine = create_async_engine(settings.DATABASE_URL, pool_size=10, max_overflow=20)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -84,7 +88,7 @@ async def store_chunks(
                     "content": chunk["text"],
                     "source": chunk["source"],
                     "idx": idx,
-                    "meta": chunk.get("metadata", "{}"),
+                    "meta": _json.dumps(chunk.get("metadata", {})),
                     "embedding": str(vector),
                 },
             )
@@ -107,19 +111,20 @@ async def store_chunks_for_doc(
                 text(
                     "INSERT INTO chunks "
                     "(document_id, content, source, chunk_index, metadata, embedding) "
-                    "VALUES (:doc_id, :content, :source, :idx, :meta, :embedding)"
+                    "VALUES (:doc_id, :content, :source, :idx, :meta::jsonb, :embedding)"
                 ),
                 {
                     "doc_id": doc_id,
                     "content": chunk["text"],
                     "source": chunk["source"],
                     "idx": idx,
-                    "meta": chunk.get("metadata", "{}"),
+                    "meta": _json.dumps(chunk.get("metadata", {})),
                     "embedding": str(vector),
                 },
             )
 
         await session.commit()
+        logger.info("Stored %d chunks for doc_id=%d", len(chunks), doc_id)
 
 
 async def search_similar(query_vector: list[float], top_k: int) -> list[dict]:

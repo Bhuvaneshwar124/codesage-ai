@@ -1,3 +1,4 @@
+import logging
 import shutil
 import uuid
 from pathlib import Path
@@ -16,6 +17,7 @@ from services.embedding import embed_chunks
 from services.parsers import parse_file
 from utils.chunking import chunk_text
 
+logger = logging.getLogger("codesage.ingest")
 router = APIRouter(tags=["ingest"])
 
 ALLOWED_EXTENSIONS = settings.SUPPORTED_EXTENSIONS
@@ -24,12 +26,20 @@ ALLOWED_EXTENSIONS = settings.SUPPORTED_EXTENSIONS
 async def _ingest_background(doc_id: int, dest: Path, filename: str):
     """Background task: parse → chunk → embed → store → mark complete."""
     try:
+        logger.info("Ingesting doc_id=%d file=%s", doc_id, filename)
         text = parse_file(dest)
+        if not text.strip():
+            logger.warning("Empty file: %s", filename)
+            await update_document_status(doc_id, "failed")
+            return
         chunks = chunk_text(text, source=filename)
+        logger.info("Created %d chunks for %s", len(chunks), filename)
         vectors = embed_chunks([c["text"] for c in chunks])
         await store_chunks_for_doc(doc_id, chunks, vectors)
         await update_document_status(doc_id, "complete")
-    except Exception:
+        logger.info("Ingestion complete for doc_id=%d (%d chunks)", doc_id, len(chunks))
+    except Exception as e:
+        logger.exception("Ingestion failed for doc_id=%d: %s", doc_id, e)
         await update_document_status(doc_id, "failed")
 
 

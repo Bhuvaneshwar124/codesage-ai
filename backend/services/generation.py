@@ -1,9 +1,12 @@
 import json
+import logging
 from typing import AsyncGenerator
 
 import httpx
 
 from config import settings
+
+logger = logging.getLogger("codesage.generation")
 
 _SYSTEM_PROMPTS = {
     "document_qa": (
@@ -60,6 +63,7 @@ async def generate(
     """Call Ollama's API to generate an answer from the augmented prompt."""
     prompt = _build_prompt(query, context_chunks, mode=mode, history=history)
 
+    logger.info("Generating answer (non-streaming) with model=%s", settings.LLM_MODEL)
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(
             f"{settings.OLLAMA_BASE_URL}/api/generate",

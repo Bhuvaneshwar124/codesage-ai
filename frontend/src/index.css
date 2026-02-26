@@ -4,6 +4,8 @@
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar styling */
@@ -20,6 +22,68 @@ body {
   border-radius: 3px;
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 .dark ::-webkit-scrollbar-thumb {
   background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Smooth page transitions */
+.tab-content {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Markdown prose styling inside messages */
+.prose-chat p {
+  margin-bottom: 0.5rem;
+}
+.prose-chat p:last-child {
+  margin-bottom: 0;
+}
+.prose-chat ul, .prose-chat ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+.prose-chat li {
+  margin-bottom: 0.25rem;
+}
+.prose-chat h1, .prose-chat h2, .prose-chat h3 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.25rem;
+}
+.prose-chat pre {
+  margin: 0.5rem 0;
+}
+.prose-chat a {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+/* Glass effect for header */
+.glass-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Typing cursor animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.typing-cursor::after {
+  content: "▋";
+  animation: blink 1s step-end infinite;
+  margin-left: 1px;
+  color: #16a34a;
 }

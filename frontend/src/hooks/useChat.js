@@ -67,7 +67,7 @@ export function useChat() {
     });
 
     abortRef.current = cancel;
-  }, [messages.length]);
+  }, []);
 
   const clearMessages = useCallback(() => {
     if (abortRef.current) abortRef.current();

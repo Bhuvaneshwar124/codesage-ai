@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,12 +7,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import documents, health, ingest, query
 from services.database import close_db, init_db
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+)
+logger = logging.getLogger("codesage")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Starting CodeSage AI...")
     await init_db()
+    logger.info("Database connected.")
     yield
     await close_db()
+    logger.info("CodeSage AI shut down.")
 
 
 app = FastAPI(

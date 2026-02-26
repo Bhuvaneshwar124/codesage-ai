@@ -10,14 +10,20 @@ export default function MessageList({ messages, isLoading }) {
   }, [messages, isLoading]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 py-2">
       {messages.map((msg, i) => (
-        <Message key={i} role={msg.role} content={msg.content} sources={msg.sources} />
+        <Message
+          key={i}
+          role={msg.role}
+          content={msg.content}
+          sources={msg.sources}
+          streaming={msg.streaming}
+        />
       ))}
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-400 py-2">
+      {isLoading && messages[messages.length - 1]?.content === "" && (
+        <div className="flex items-center gap-3 pl-10 animate-fade-in">
           <LoadingSpinner />
-          <span className="text-sm">Thinking...</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">CodeSage is thinking...</span>
         </div>
       )}
       <div ref={endRef} />
