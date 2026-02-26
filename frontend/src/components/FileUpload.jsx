@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
-import { uploadFiles } from "../services/api";
+import { uploadFile, getIngestStatus } from "../services/api";
 import LoadingSpinner from "./LoadingSpinner";
 
 export default function FileUpload() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
 
@@ -24,15 +24,37 @@ export default function FileUpload() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const pollStatus = async (documentId, filename) => {
+    const maxAttempts = 30;
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      try {
+        const status = await getIngestStatus(documentId);
+        if (status.status === "complete" || status.status === "failed") {
+          return status;
+        }
+      } catch {
+        // ignore transient errors
+      }
+    }
+    return { status: "timeout", filename };
+  };
+
   const handleUpload = async () => {
     if (files.length === 0) return;
     setUploading(true);
     setError(null);
-    setResult(null);
+    setResults([]);
 
     try {
-      const data = await uploadFiles(files);
-      setResult(data);
+      const uploadResults = await Promise.all(
+        files.map(async (f) => {
+          const data = await uploadFile(f);
+          const finalStatus = await pollStatus(data.document_id, f.name);
+          return { ...data, ...finalStatus };
+        })
+      );
+      setResults(uploadResults);
       setFiles([]);
     } catch (err) {
       setError(err.message || "Upload failed");
@@ -99,11 +121,23 @@ export default function FileUpload() {
         </div>
       )}
 
-      {/* Result */}
-      {result && (
-        <div className="mt-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-xl px-4 py-3 text-sm">
-          ✅ Processed {result.files_processed} file(s), created{" "}
-          {result.chunks_created} chunks.
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {results.map((r, i) => (
+            <div
+              key={i}
+              className={`rounded-xl px-4 py-3 text-sm ${
+                r.status === "complete"
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+              }`}
+            >
+              {r.status === "complete"
+                ? `✅ ${r.filename || r.name}: ingested ${r.chunk_count ?? ""} chunks`
+                : `❌ ${r.filename || r.name}: ${r.status}`}
+            </div>
+          ))}
         </div>
       )}
 
@@ -116,3 +150,4 @@ export default function FileUpload() {
     </div>
   );
 }
+

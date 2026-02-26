@@ -8,7 +8,7 @@ CodeSage AI is a full-stack Retrieval-Augmented Generation (RAG) platform that e
 |------------|--------------------------------------------------|
 | Frontend   | React 18, Vite, Tailwind CSS                    |
 | Backend    | FastAPI, SQLAlchemy (async), Sentence Transformers |
-| Database   | PostgreSQL 16 + pgvector                         |
+| Database   | PostgreSQL 17 + pgvector                         |
 | LLM        | Ollama (Mistral, Llama, etc.)                    |
 | Infra      | Docker Compose                                   |
 
@@ -94,13 +94,16 @@ curl http://localhost:8000/health
 
 ## API Endpoints
 
-| Method | Endpoint                          | Description                    |
-|--------|-----------------------------------|--------------------------------|
-| GET    | `/health`                         | Health check                   |
-| POST   | `/api/ingest`                     | Upload & ingest files          |
-| POST   | `/api/query`                      | Ask a question (RAG)           |
-| GET    | `/api/documents`                  | List ingested documents        |
-| DELETE | `/api/documents/{document_name}`  | Delete a document              |
+| Method | Endpoint                              | Description                          |
+|--------|---------------------------------------|--------------------------------------|
+| GET    | `/api/health`                         | Health check                         |
+| POST   | `/api/ingest/upload`                  | Upload & start background ingestion  |
+| GET    | `/api/ingest/status/{document_id}`    | Check ingestion status               |
+| POST   | `/api/query/ask`                      | Ask a question (streaming SSE)       |
+| POST   | `/api/query/ask-simple`               | Ask a question (JSON response)       |
+| GET    | `/api/documents/list`                 | List ingested documents              |
+| DELETE | `/api/documents/{document_id}`        | Delete a document                    |
+| GET    | `/api/documents/{document_id}/chunks` | Get document chunks                  |
 
 Full API reference: [docs/API.md](docs/API.md)
 

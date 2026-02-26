@@ -20,10 +20,10 @@ export function useDocuments() {
   }, []);
 
   const removeDocument = useCallback(
-    async (name) => {
+    async (id) => {
       try {
-        await deleteDocument(name);
-        setDocuments((prev) => prev.filter((d) => d.name !== name));
+        await deleteDocument(id);
+        setDocuments((prev) => prev.filter((d) => d.id !== id));
       } catch (err) {
         setError(err.message);
       }
@@ -37,3 +37,4 @@ export function useDocuments() {
 
   return { documents, loading, error, refresh, removeDocument };
 }
+

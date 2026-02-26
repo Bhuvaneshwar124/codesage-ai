@@ -40,9 +40,9 @@ export default function DocumentList() {
       <div className="grid gap-3">
         {documents.map((doc) => (
           <DocumentCard
-            key={doc.name}
+            key={doc.id}
             document={doc}
-            onDelete={() => removeDocument(doc.name)}
+            onDelete={() => removeDocument(doc.id)}
           />
         ))}
       </div>
